@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     }
 
     try {
+        const supabase = getSupabase();
         // 1. Verify order in Supabase
         const { data: order, error: orderError } = await supabase
             .from("orders")

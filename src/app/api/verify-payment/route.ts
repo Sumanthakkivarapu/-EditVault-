@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
             .digest("hex");
 
         if (expectedSignature === razorpay_signature) {
+            const supabase = getSupabase();
             // 1. Save to Supabase
             const { error: dbError } = await supabase
                 .from("orders")
