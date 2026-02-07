@@ -73,7 +73,7 @@ function CheckoutContent() {
 
                     const verifyData = await verifyRes.json();
                     if (verifyData.success) {
-                        window.location.href = `/success?payment_id=${response.razorpay_payment_id}&email=${email}`;
+                        window.location.href = `/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&email=${email}`;
                     } else {
                         alert("Payment verification failed. Please contact support.");
                     }

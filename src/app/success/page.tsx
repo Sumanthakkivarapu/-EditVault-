@@ -40,11 +40,14 @@ function SuccessContent() {
                         <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
                             <div>
                                 <p className="font-bold">Premium Asset Pack</p>
-                                <p className="text-sm text-muted-foreground">Size: 420.5 MB • Version: 1.0</p>
+                                <p className="text-sm text-muted-foreground">Size: ~420.5 MB • Version: 1.0</p>
                             </div>
-                            <button className="px-6 py-2 bg-neon-purple text-white font-bold rounded-lg hover:shadow-[0_0_15px_rgba(176,38,255,0.6)] transition-all flex items-center gap-2">
+                            <Link
+                                href={`/api/download?order_id=${searchParams.get("order_id")}`}
+                                className="px-6 py-2 bg-neon-purple text-white font-bold rounded-lg hover:shadow-[0_0_15px_rgba(176,38,255,0.6)] transition-all flex items-center gap-2"
+                            >
                                 Download Now
-                            </button>
+                            </Link>
                         </div>
 
                         <div className="flex items-start gap-3 p-4 bg-neon-blue/5 rounded-xl border border-neon-blue/20">
