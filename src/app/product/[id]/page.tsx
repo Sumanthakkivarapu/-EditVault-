@@ -1,46 +1,47 @@
 "use client";
 
-import { use } from "react";
-import { motion } from "framer-motion";
-import { ShoppingCart, CheckCircle, Smartphone, Monitor, Info, ArrowLeft } from "lucide-react";
+import { useEffect, useState, use } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingCart, CheckCircle, Smartphone, Monitor, Info, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const PRODUCTS = [
-    {
-        id: 1,
-        name: "TikTok Trend Transitions",
-        price: 499,
-        tag: "CapCut",
-        desc: "15+ viral transitions for short-form content. These effects are optimized for high-paced editing and viral engagement.",
-        included: ["15 Dynamic Transitions", "Installation Guide", "Lifetime Updates"],
-        software: "CapCut (Desktop & Mobile)",
-        license: "Personal Use Only"
-    },
-    {
-        id: 2,
-        name: "Cinematic Master Collection",
-        price: 999,
-        tag: "LUTs",
-        desc: "Professional color grading presets for any mood. Transform your flat footage into cinematic masterpieces with a single click.",
-        included: ["25 Cinematic LUTs (.cube)", "Compatible with all Pro Apps", "Instructional Video"],
-        software: "Premiere, Davinci, FCPX, CapCut",
-        license: "Personal Use / Social Media"
-    },
-    {
-        id: 3,
-        name: "Creator Essentials Pack",
-        price: 1499,
-        tag: "Premiere Pro",
-        desc: "The ultimate toolkit for YouTubers. Contains everything from titles and transitions to sound effects and overlays.",
-        included: ["50+ Mogrt Templates", "10 Intro Snippets", "Exclusive SFX Library"],
-        software: "Adobe Premiere Pro CC",
-        license: "Commercial Use (Single Seat)"
-    },
-];
+import { getSupabase } from "@/lib/supabase";
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const product = PRODUCTS.find((p) => p.id === parseInt(id)) || PRODUCTS[0];
+    const [product, setProduct] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            const supabase = getSupabase();
+            const { data, error } = await supabase
+                .from("products")
+                .select("*")
+                .eq("id", id)
+                .single();
+
+            if (data) setProduct(data);
+            setLoading(false);
+        };
+        fetchProduct();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-neon-purple animate-spin" />
+            </div>
+        );
+    }
+
+    if (!product) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+                <h1 className="text-4xl font-bold mb-4">Product Not Found</h1>
+                <Link href="/store" className="text-neon-blue hover:underline">Return to Store</Link>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -52,13 +53,12 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 {/* Left: Preview */}
                 <div className="space-y-6">
                     <div className="aspect-video glass rounded-3xl border border-white/10 flex items-center justify-center text-muted-foreground relative overflow-hidden group">
-                        <span className="text-xl font-bold group-hover:scale-110 transition-transform">Video Preview Placeholder</span>
+                        {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-xl font-bold group-hover:scale-110 transition-transform">Preview Image</span>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="aspect-square glass rounded-xl border border-white/5 flex items-center justify-center text-xs text-muted-foreground">Thumbnail</div>
-                        ))}
                     </div>
                 </div>
 
@@ -69,7 +69,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                             {product.tag}
                         </span>
                         <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-                        <p className="text-xl text-muted-foreground leading-relaxed">{product.desc}</p>
+                        <p className="text-xl text-muted-foreground leading-relaxed">{product.description || product.desc}</p>
                     </div>
 
                     <div className="flex items-center gap-6">
@@ -87,20 +87,20 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                             <h4 className="text-sm font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2">
                                 <Smartphone className="w-4 h-4" /> Software
                             </h4>
-                            <p className="text-sm font-medium">{product.software}</p>
+                            <p className="text-sm font-medium">{product.software || "N/A"}</p>
                         </div>
                         <div className="space-y-3">
                             <h4 className="text-sm font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" /> License
                             </h4>
-                            <p className="text-sm font-medium">{product.license}</p>
+                            <p className="text-sm font-medium">Personal / Commercial Use</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <h4 className="text-lg font-bold">What's Included?</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {product.included.map((item, i) => (
+                            {(product.included || ["Full Asset Package", "License Key", "Tutorial Guide"]).map((item: any, i: number) => (
                                 <div key={i} className="flex items-center gap-3 text-muted-foreground text-sm">
                                     <CheckCircle className="w-4 h-4 text-neon-purple" /> {item}
                                 </div>
