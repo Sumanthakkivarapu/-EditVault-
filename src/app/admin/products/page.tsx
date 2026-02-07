@@ -1,20 +1,30 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Plus, Search, MoreVertical, Edit2, Trash2, Eye } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Plus, Search, Edit2, Trash2, Eye } from "lucide-react";
 import Link from "next/link";
-
-const MOCK_PRODUCTS = [
-    { id: 1, name: "TikTok Trend Transitions", price: 499, tag: "CapCut", sales: 24 },
-    { id: 2, name: "Cinematic Master Collection", price: 999, tag: "LUTs", sales: 18 },
-    { id: 3, name: "Creator Essentials Pack", price: 1499, tag: "Premiere Pro", sales: 6 },
-];
+import { getSupabase } from "@/lib/supabase";
 
 export default function AdminProducts() {
     const [search, setSearch] = useState("");
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const filteredProducts = MOCK_PRODUCTS.filter(p =>
+    useEffect(() => {
+        const fetchProducts = async () => {
+            const supabase = getSupabase();
+            const { data, error } = await supabase
+                .from("products")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (data) setProducts(data);
+            setLoading(false);
+        };
+        fetchProducts();
+    }, []);
+
+    const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -58,34 +68,48 @@ export default function AdminProducts() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {filteredProducts.map((product) => (
-                                <tr key={product.id} className="text-sm hover:bg-white/5 transition-colors">
-                                    <td className="px-4 py-4 flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center text-[10px] uppercase font-bold text-muted-foreground">
-                                            {product.tag.slice(0, 2)}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold">{product.name}</p>
-                                            <p className="text-xs text-muted-foreground">{product.tag}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 font-medium text-neon-blue">₹{product.price}</td>
-                                    <td className="px-4 py-4 font-bold">{product.sales}</td>
-                                    <td className="px-4 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Link href={`/product/${product.id}`} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white">
-                                                <Eye className="w-4 h-4" />
-                                            </Link>
-                                            <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white">
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-2 hover:bg-red-500/10 rounded-lg transition-colors text-red-400">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={4} className="px-4 py-20 text-center text-muted-foreground italic">
+                                        Loading inventory...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : filteredProducts.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-4 py-20 text-center text-muted-foreground italic">
+                                        No products found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredProducts.map((product) => (
+                                    <tr key={product.id} className="text-sm hover:bg-white/5 transition-colors">
+                                        <td className="px-4 py-4 flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center text-[10px] uppercase font-bold text-muted-foreground">
+                                                {product.tag?.slice(0, 2) || "AS"}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold">{product.name}</p>
+                                                <p className="text-xs text-muted-foreground">{product.tag}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 font-medium text-neon-blue">₹{product.price}</td>
+                                        <td className="px-4 py-4 font-bold">{product.sales || 0}</td>
+                                        <td className="px-4 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link href={`/product/${product.id}`} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white">
+                                                    <Eye className="w-4 h-4" />
+                                                </Link>
+                                                <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white">
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-2 hover:bg-red-500/10 rounded-lg transition-colors text-red-400">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

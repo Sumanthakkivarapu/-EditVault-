@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, amount } = await req.json();
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -23,9 +23,9 @@ export async function POST(req: Request) {
                 .insert([{
                     order_id: razorpay_order_id,
                     payment_id: razorpay_payment_id,
-                    amount: 499, // In a real app, fetch the actual amount from the product/stored order
+                    amount: amount,
                     status: "success",
-                    email: "customer@example.com" // This should be passed from the frontend
+                    email: email
                 }]);
 
             if (dbError) {

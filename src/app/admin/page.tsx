@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
     TrendingUp,
@@ -9,14 +10,50 @@ import {
     ArrowUpRight,
     ShoppingCart
 } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
 
 export default function AdminDashboard() {
-    const stats = [
-        { label: "Total Revenue", value: "₹24,500", icon: DollarSign, trend: "+12%", color: "text-green-400" },
-        { label: "Orders", value: "48", icon: ShoppingCart, trend: "+5%", color: "text-blue-400" },
-        { label: "Products", value: "12", icon: Package, trend: "0%", color: "text-purple-400" },
-        { label: "New Customers", value: "32", icon: Users, trend: "+18%", color: "text-pink-400" },
-    ];
+    const [stats, setStats] = useState([
+        { label: "Total Revenue", value: "₹0", icon: DollarSign, trend: "0%", color: "text-green-400" },
+        { label: "Orders", value: "0", icon: ShoppingCart, trend: "0%", color: "text-blue-400" },
+        { label: "Products", value: "0", icon: Package, trend: "0%", color: "text-purple-400" },
+        { label: "Customers", value: "0", icon: Users, trend: "0%", color: "text-pink-400" },
+    ]);
+    const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const supabase = getSupabase();
+
+            // Fetch Products Count
+            const { count: productCount } = await supabase.from("products").select("*", { count: 'exact', head: true });
+
+            // Fetch Orders
+            const { data: orderData } = await supabase
+                .from("orders")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (orderData) {
+                const totalRevenue = orderData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                const uniqueCustomers = new Set(orderData.map(o => o.email)).size;
+
+                setStats([
+                    { label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, trend: "+100%", color: "text-green-400" },
+                    { label: "Orders", value: orderData.length.toString(), icon: ShoppingCart, trend: "+100%", color: "text-blue-400" },
+                    { label: "Products", value: (productCount || 0).toString(), icon: Package, trend: "0%", color: "text-purple-400" },
+                    { label: "Customers", value: uniqueCustomers.toString(), icon: Users, trend: "+100%", color: "text-pink-400" },
+                ]);
+
+                setRecentOrders(orderData.slice(0, 5).map(o => ({
+                    id: o.order_id.slice(0, 8),
+                    status: o.status === 'success' ? 'Success' : 'Pending',
+                    amount: `₹${o.amount}`
+                })));
+            }
+        };
+        fetchStats();
+    }, []);
 
     return (
         <div className="space-y-10">
@@ -65,22 +102,26 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {[
-                                    { id: "#4032", status: "Success", amount: "₹499" },
-                                    { id: "#4031", status: "Success", amount: "₹999" },
-                                    { id: "#4030", status: "Pending", amount: "₹1,499" },
-                                ].map((order, i) => (
-                                    <tr key={i} className="text-sm hover:bg-white/5 transition-colors">
-                                        <td className="px-4 py-4">{order.id}</td>
-                                        <td className="px-4 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${order.status === "Success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                                                }`}>
-                                                {order.status}
-                                            </span>
+                                {recentOrders.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground italic text-xs">
+                                            No recent orders found.
                                         </td>
-                                        <td className="px-4 py-4 font-bold">{order.amount}</td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    recentOrders.map((order, i) => (
+                                        <tr key={i} className="text-sm hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-4">{order.id}</td>
+                                            <td className="px-4 py-4">
+                                                <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${order.status === "Success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                                                    }`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 font-bold">{order.amount}</td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
