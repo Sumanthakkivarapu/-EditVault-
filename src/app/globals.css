@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-purple: #b026ff;
+  --color-neon-blue: #00d2ff;
+  --color-neon-pink: #ff007f;
+
+  --color-background: #050505;
+  --color-foreground: #ffffff;
+
+  --color-card: #121212;
+  --color-card-foreground: #ffffff;
+
+  --color-muted: #262626;
+  --color-muted-foreground: #a3a3a3;
+}
+
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+.glass {
+  background: rgba(18, 18, 18, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 15px rgba(176, 38, 255, 0.4);
+}
+
+.neon-glow-blue {
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #00d2ff 0%, #b026ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
